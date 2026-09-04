@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Attempt History - QuestAI{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header & Filter -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Attempt History</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Review your past study quiz attempts, scores, and practice records.</p>
+        </div>
+
+        <!-- Filter by Arena -->
+        <form method="GET" class="flex items-center space-x-2">
+            <select name="arena" onchange="this.form.submit()"
+                class="px-4 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All Arenas</option>
+                {% for ar in arenas %}
+                <option value="{{ ar.id }}" {% if selected_arena == ar.id|stringformat:"s" %}selected{% endif %}>
+                    {{ ar.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Attempts Table / Cards -->
+    {% if attempts %}
+    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead class="bg-slate-50 dark:bg-slate-900/60 text-xs uppercase font-bold text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                        <th class="px-6 py-4">Arena</th>
+                        <th class="px-6 py-4">Questions</th>
+                        <th class="px-6 py-4">Score & Grade</th>
+                        <th class="px-6 py-4">Time Spent</th>
+                        <th class="px-6 py-4">Date & Time</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                    {% for att in attempts %}
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition-colors">
+                        <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                            <a href="{% url 'arenas:detail' att.arena.id %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                                {{ att.arena.name }}
+                            </a>
+                            <span class="block text-xs font-normal text-slate-400">{{ att.get_question_filter_display }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-semibold">
+                            {{ att.total_questions }} Total
+                            {% if att.total_mcq_count > 0 %}
+                            <span class="block text-slate-400 text-[10px]">({{ att.correct_mcq_count }}/{{ att.total_mcq_count }} MCQs correct)</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold
+                                {% if att.score_percentage >= 80 %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300
+                                {% elif att.score_percentage >= 60 %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300
+                                {% else %}bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300{% endif %}">
+                                {{ att.score_percentage }}% (Grade {{ att.grade }})
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-mono">
+                            {{ att.formatted_duration }}
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-400">
+                            {{ att.completed_at|date:"M d, Y - H:i" }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'quizzes:attempt_result' att.id %}"
+                                class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors">
+                                <span>Review Answers</span>
+                                <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-16 px-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm max-w-xl mx-auto">
+        <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 text-xl">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">No Quiz Attempts Found</h3>
+        <p class="text-xs text-slate-500 mt-1">
+            Choose an Arena and click "Take Quiz" to complete your first timed practice attempt.
+        </p>
+        <a href="{% url 'arenas:list' %}" class="mt-4 inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700">
+            Browse Arenas
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+

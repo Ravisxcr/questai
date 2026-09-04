@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ arena.name }} - QuestAI Workspace{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Arena Header Banner -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden">
+        
+        <!-- Color Accent Top Bar -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 
+            {% if arena.color_theme == 'indigo' %}bg-indigo-500
+            {% elif arena.color_theme == 'emerald' %}bg-emerald-500
+            {% elif arena.color_theme == 'amber' %}bg-amber-500
+            {% elif arena.color_theme == 'rose' %}bg-rose-500
+            {% elif arena.color_theme == 'sky' %}bg-sky-500
+            {% elif arena.color_theme == 'teal' %}bg-teal-500
+            {% else %}bg-purple-500{% endif %}"></div>
+
+        <div class="space-y-2 max-w-2xl">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'arenas:list' %}" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-medium flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Arenas
+                </a>
+                <span class="text-slate-300 dark:text-slate-700">•</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider
+                    {% if arena.color_theme == 'indigo' %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300
+                    {% elif arena.color_theme == 'emerald' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300
+                    {% elif arena.color_theme == 'amber' %}bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300
+                    {% elif arena.color_theme == 'rose' %}bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300
+                    {% else %}bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300{% endif %}">
+                    {{ arena.color_theme }} workspace
+                </span>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{{ arena.name }}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                {{ arena.description|default:"No description provided for this arena." }}
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                class="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]">
+                <i class="fa-solid fa-cloud-arrow-up mr-2 text-xs"></i> Upload PDF & Generate
+            </button>
+
+            {% if questions.exists %}
+            <button onclick="document.getElementById('quizModal').classList.remove('hidden')"
+                class="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02]">
+                <i class="fa-solid fa-play mr-2 text-xs"></i> Take Quiz
+            </button>
+
+            <!-- Export Dropdown -->
+            <div class="relative">
+                <button onclick="this.nextElementSibling.classList.toggle('hidden')"
+                    class="inline-flex items-center px-3.5 py-2.5 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                    <i class="fa-solid fa-download mr-1.5 text-xs text-slate-400"></i> Export
+                </button>
+                <div class="hidden absolute right-0 mt-1 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-1 z-30 text-xs font-medium">
+                    <a href="{% url 'questions:export' arena.id 'markdown' %}" class="flex items-center px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <i class="fa-brands fa-markdown mr-2 text-indigo-500"></i> Export as Markdown
+                    </a>
+                    <a href="{% url 'questions:export' arena.id 'json' %}" class="flex items-center px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <i class="fa-solid fa-code mr-2 text-amber-500"></i> Export as JSON
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <a href="{% url 'arenas:update' arena.id %}" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Edit Arena">
+                <i class="fa-solid fa-pen text-xs"></i>
+            </a>
+            <a href="{% url 'arenas:delete' arena.id %}" class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors" title="Delete Arena">
+                <i class="fa-solid fa-trash text-xs"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Background Task Banner (Live Polling via JS) -->
+    {% if latest_task and latest_task.status in 'PENDING,STARTED' %}
+    <div id="activeTaskBanner" data-task-id="{{ latest_task.task_id }}" data-arena-id="{{ arena.id }}"
+        class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/80 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-pulse">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center animate-spin">
+                <i class="fa-solid fa-circle-notch text-sm"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-200">Celery AI Generation in Progress</h4>
+                <p id="taskStatusMessage" class="text-xs text-indigo-700 dark:text-indigo-400 mt-0.5">{{ latest_task.message|default:"Processing PDF text and generating questions with Ollama..." }}</p>
+            </div>
+        </div>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
+            Background Worker Active
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- 3-Panel NotebookLM Workspace Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Sources / PDFs (col-span-3) -->
+        <div class="lg:col-span-3 space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-regular fa-file-pdf text-rose-500 text-base"></i>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Sources ({{ documents.count }})</h2>
+                    </div>
+                    <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                        class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 p-1">
+                        <i class="fa-solid fa-plus mr-1"></i> Add
+                    </button>
+                </div>
+
+                <!-- Documents List -->
+                {% if documents %}
+                <div class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
+                    {% for doc in documents %}
+                    <div class="group relative p-3 rounded-xl border border-slate-100 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-700/40 hover:shadow-sm transition-all">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-2.5 overflow-hidden">
+                                <i class="fa-solid fa-file-pdf text-rose-500 text-lg mt-0.5 flex-shrink-0"></i>
+                                <div class="overflow-hidden">
+                                    <h3 class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title="{{ doc.filename }}">
+                                        {{ doc.filename }}
+                                    </h3>
+                                    <div class="flex items-center space-x-2 text-[10px] text-slate-400 mt-1">
+                                        <span>{{ doc.formatted_size }}</span>
+                                        <span>•</span>
+                                        <span>{{ doc.page_count }} pages</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{% url 'arenas:document_delete' arena.id doc.id %}" onsubmit="return confirm('Delete this PDF?');">
+                                {% csrf_token %}
+                                <button type="submit" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 p-1 text-xs transition-opacity" title="Remove PDF">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Document Status Badge -->
+                        <div class="mt-2.5 flex items-center justify-between text-[10px]">
+                            {% if doc.status == 'COMPLETED' %}
+                            <span class="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-medium">
+                                <i class="fa-solid fa-circle-check mr-1 text-[8px]"></i> Ready
+                            </span>
+                            {% elif doc.status == 'PROCESSING' %}
+                            <span class="inline-flex items-center text-indigo-600 dark:text-indigo-400 font-medium animate-pulse">
+                                <i class="fa-solid fa-circle-notch fa-spin mr-1 text-[8px]"></i> Processing...
+                            </span>
+                            {% elif doc.status == 'FAILED' %}
+                            <span class="inline-flex items-center text-rose-500 font-medium" title="{{ doc.error_message }}">
+                                <i class="fa-solid fa-triangle-exclamation mr-1 text-[8px]"></i> Error
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center text-slate-400 font-medium">
+                                <i class="fa-regular fa-clock mr-1 text-[8px]"></i> Queued
+                            </span>
+                            {% endif %}
+                            <span class="text-slate-400 text-[9px]">{{ doc.created_at|date:"M d" }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 px-2 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                    <i class="fa-solid fa-file-arrow-up text-slate-300 dark:text-slate-600 text-2xl mb-2"></i>
+                    <p class="text-xs font-medium text-slate-600 dark:text-slate-300">No PDFs uploaded yet</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Upload course notes or slides to generate questions.</p>
+                    <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                        class="mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 hover:bg-indigo-100">
+                        Upload PDF
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Center Column: Questions Workspace (col-span-6) -->
+        <div class="lg:col-span-6 space-y-4">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-4 min-h-[500px]">
+                
+                <!-- Filter Tabs & Search Bar -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                    
+                    <!-- Tabs -->
+                    <div class="flex items-center space-x-1 overflow-x-auto text-xs font-semibold">
+                        <a href="?type=ALL{% if search_query %}&q={{ search_query }}{% endif %}"
+                            class="px-3 py-1.5 rounded-lg transition-colors {% if selected_type == 'ALL' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700{% endif %}">
+                            All
+                        </a>
+                        <a href="?type=MCQ{% if search_query %}&q={{ search_query }}{% endif %}"
+                            class="px-3 py-1.5 rounded-lg transition-colors {% if selected_type == 'MCQ' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700{% endif %}">
+                            MCQ
+                        </a>
+                        <a href="?type=SHORT{% if search_query %}&q={{ search_query }}{% endif %}"
+                            class="px-3 py-1.5 rounded-lg transition-colors {% if selected_type == 'SHORT' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700{% endif %}">
+                            Short
+                        </a>
+                        <a href="?type=LONG{% if search_query %}&q={{ search_query }}{% endif %}"
+                            class="px-3 py-1.5 rounded-lg transition-colors {% if selected_type == 'LONG' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700{% endif %}">
+                            Long
+                        </a>
+                    </div>
+
+                    <!-- Search -->
+                    <form method="GET" class="relative">
+                        <input type="hidden" name="type" value="{{ selected_type }}">
+                        <input type="text" name="q" value="{{ search_query }}" placeholder="Filter questions..."
+                            class="w-full sm:w-44 pl-7 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-[10px]"></i>
+                    </form>
+                </div>
+
+                <!-- Questions List -->
+                {% if questions %}
+                <div class="space-y-4">
+                    {% for q in questions %}
+                    <div class="bg-slate-50/70 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700/60 p-4 space-y-3 hover:border-slate-300 transition-all">
+                        
+                        <!-- Badges & Delete -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider
+                                    {% if q.is_mcq %}bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300
+                                    {% elif q.is_short %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300
+                                    {% else %}bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300{% endif %}">
+                                    {{ q.get_question_type_display }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                    {{ q.difficulty }}
+                                </span>
+                            </div>
+
+                            <form method="POST" action="{% url 'questions:delete' q.id %}" onsubmit="return confirm('Delete this question?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-slate-400 hover:text-rose-500 p-1 text-xs" title="Delete question">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Question Prompt -->
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">
+                            {{ q.question_text }}
+                        </p>
+
+                        <!-- MCQ Choices -->
+                        {% if q.is_mcq and q.options %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                            {% for opt in q.options %}
+                            <div class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 flex items-center">
+                                <span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 flex-shrink-0 mr-2 flex items-center justify-center text-[10px] text-slate-400">
+                                    {{ forloop.counter }}
+                                </span>
+                                <span class="line-clamp-2">{{ opt }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Reveal Answer Accordion -->
+                        <details class="group/ans bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
+                            <summary class="cursor-pointer px-3 py-2 font-semibold text-indigo-600 dark:text-indigo-400 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/40 select-none">
+                                <span>Reveal Model Answer & Rubric</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] group-open/ans:rotate-180 transition-transform"></i>
+                            </summary>
+                            <div class="p-3 pt-2 border-t border-slate-100 dark:border-slate-700 space-y-2 text-slate-700 dark:text-slate-300">
+                                <div>
+                                    <span class="font-bold text-slate-900 dark:text-white">Correct / Ideal Answer:</span>
+                                    <p class="mt-1 text-slate-800 dark:text-slate-200 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5 rounded-lg font-medium">
+                                        {{ q.correct_answer }}
+                                    </p>
+                                </div>
+                                {% if q.explanation %}
+                                <div>
+                                    <span class="font-bold text-slate-900 dark:text-white">Explanation:</span>
+                                    <p class="mt-0.5 text-slate-600 dark:text-slate-400">{{ q.explanation }}</p>
+                                </div>
+                                {% endif %}
+                                {% if q.key_points %}
+                                <div>
+                                    <span class="font-bold text-slate-900 dark:text-white">Key Points / Rubric:</span>
+                                    <div class="flex flex-wrap gap-1 mt-1">
+                                        {% for kp in q.key_points %}
+                                        <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[11px]">
+                                            • {{ kp }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </details>
+
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-16 px-4">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 text-xl">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">No Questions in this Filter</h3>
+                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                        Upload your PDFs using the "Upload PDF & Generate" button to have Celery and Ollama generate MCQs, short, and long questions automatically.
+                    </p>
+                    <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
+                        class="mt-4 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700">
+                        Upload & Generate Questions
+                    </button>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <!-- Right Column: Quiz Quick Launcher & Attempts History (col-span-3) -->
+        <div class="lg:col-span-3 space-y-4">
+            
+            <!-- Quick Practice Card -->
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg p-5 text-white space-y-4">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-white">
+                        <i class="fa-solid fa-graduation-cap text-sm"></i>
+                    </div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider">Practice Quiz</h2>
+                </div>
+                
+                <p class="text-xs text-indigo-100 leading-relaxed">
+                    Test yourself on questions from this Arena. Questions are timed and your results are saved for future review.
+                </p>
+
+                {% if questions.exists %}
+                <form method="POST" action="{% url 'quizzes:start' arena.id %}" class="space-y-3">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-[11px] font-medium text-indigo-200 uppercase mb-1">Question Type</label>
+                        <select name="filter_type" class="w-full px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-xs focus:outline-none focus:ring-1 focus:ring-white">
+                            <option value="ALL" class="text-slate-900">All Question Types</option>
+                            <option value="MCQ" class="text-slate-900">Multiple Choice Only</option>
+                            <option value="SHORT" class="text-slate-900">Short Answer Only</option>
+                            <option value="LONG" class="text-slate-900">Long Answer Only</option>
+                        </select>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-indigo-700 hover:bg-indigo-50 shadow-md transition-all flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-play text-[10px]"></i>
+                        <span>Start Timed Attempt</span>
+                    </button>
+                </form>
+                {% else %}
+                <button disabled class="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-white/20 text-white/60 cursor-not-allowed">
+                    Generate Questions First
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Arena Stats Card -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-3">
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider pb-2 border-b border-slate-100 dark:border-slate-700">
+                    Arena Performance
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                        <span class="block text-xl font-extrabold text-indigo-600 dark:text-indigo-400">{{ arena.average_score }}%</span>
+                        <span class="block text-[10px] text-slate-400 font-medium">Average Score</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                        <span class="block text-xl font-extrabold text-slate-800 dark:text-slate-200">{{ arena.total_attempts }}</span>
+                        <span class="block text-[10px] text-slate-400 font-medium">Attempts Taken</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Attempts in this Arena -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Attempt History</h3>
+                    <a href="{% url 'quizzes:history' %}?arena={{ arena.id }}" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">View All</a>
+                </div>
+
+                {% if recent_attempts %}
+                <div class="space-y-2">
+                    {% for att in recent_attempts %}
+                    <a href="{% url 'quizzes:attempt_result' att.id %}" class="block p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-700/40 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold {% if att.score_percentage >= 80 %}text-emerald-500{% elif att.score_percentage >= 60 %}text-amber-500{% else %}text-rose-500{% endif %}">
+                                {{ att.score_percentage }}% (Grade {{ att.grade }})
+                            </span>
+                            <span class="text-[10px] text-slate-400">{{ att.formatted_duration }}</span>
+                        </div>
+                        <span class="block text-[10px] text-slate-400 mt-0.5">{{ att.started_at|date:"M d, H:i" }} &bull; {{ att.total_questions }} Qs</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 text-center py-4">No quiz attempts yet.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal: Upload PDFs & Configure AI Question Generation -->
+<div id="uploadModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 max-w-xl w-full p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto">
+        
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Upload PDFs & Generate Questions</h3>
+                    <p class="text-xs text-slate-500">Celery worker will extract text and invoke Ollama in the background.</p>
+                </div>
+            </div>
+            <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'arenas:upload' arena.id %}" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <!-- PDF Files Input -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Select PDF Documents (One or multiple) *
+                </label>
+                {{ upload_form.pdf_files }}
+                <p class="text-[11px] text-slate-400 mt-1">You can select multiple files at once. All will be ingested into this Arena.</p>
+            </div>
+
+            <!-- Question Generation Parameters -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-700 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1 text-indigo-500"></i> AI Questions to Generate on Upload
+                </h4>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">MCQs</label>
+                        {{ upload_form.mcq_count }}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Short Answer</label>
+                        {{ upload_form.short_count }}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Long / Essay</label>
+                        {{ upload_form.long_count }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Difficulty</label>
+                        {{ upload_form.difficulty }}
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Ollama Model</label>
+                        <select name="model_name" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs">
+                            {% for m in available_models %}
+                            <option value="{{ m }}" {% if m == OLLAMA_DEFAULT_MODEL %}selected{% endif %}>{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')"
+                    class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Start Extraction & Generation
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- Modal: Start Quiz / Filter Selection -->
+<div id="quizModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 sm:p-8 space-y-6 relative">
+        
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-play text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Start Quiz Session</h3>
+                    <p class="text-xs text-slate-500">Configure your test parameters.</p>
+                </div>
+            </div>
+            <button onclick="document.getElementById('quizModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'quizzes:start' arena.id %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Questions To Include</label>
+                <select name="filter_type" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm">
+                    <option value="ALL">All Question Types (MCQ, Short, Long)</option>
+                    <option value="MCQ">Multiple Choice Questions Only</option>
+                    <option value="SHORT">Short Answer Conceptual Questions Only</option>
+                    <option value="LONG">Long / Essay Questions Only</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Question Limit</label>
+                <select name="limit" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm">
+                    <option value="0">All available questions</option>
+                    <option value="5">Quick 5 Questions</option>
+                    <option value="10">10 Questions</option>
+                    <option value="15">15 Questions</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button type="button" onclick="document.getElementById('quizModal').classList.add('hidden')"
+                    class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="px-5 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20">
+                    Begin Attempt
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live task status polling for background Celery worker
+    const taskBanner = document.getElementById('activeTaskBanner');
+    if (taskBanner) {
+        const taskId = taskBanner.dataset.taskId;
+        const arenaId = taskBanner.dataset.arenaId;
+        const msgEl = document.getElementById('taskStatusMessage');
+
+        const pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/arenas/${arenaId}/tasks/${taskId}/status/`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.message) {
+                        msgEl.textContent = data.message;
+                    }
+                    if (data.status === 'SUCCESS') {
+                        clearInterval(pollInterval);
+                        msgEl.textContent = `Completed! Generated ${data.generated_count} questions. Refreshing...`;
+                        setTimeout(() => window.location.reload(), 1200);
+                    } else if (data.status === 'FAILURE') {
+                        clearInterval(pollInterval);
+                        msgEl.textContent = `Task failed: ${data.error_detail || 'Unknown error'}`;
+                        taskBanner.classList.remove('bg-indigo-50', 'dark:bg-indigo-950/40', 'border-indigo-200');
+                        taskBanner.classList.add('bg-rose-50', 'dark:bg-rose-950/40', 'border-rose-200');
+                    }
+                }
+            } catch (err) {
+                console.error("Polling error:", err);
+            }
+        }, 2500);
+    }
+</script>
+{% endblock %}
+

@@ -7,11 +7,22 @@ authors = [
     { name = "Ravisxcr", email = "rranjankumarprajapati@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "django>=5.0",
+    "celery>=5.3.0",
+    "redis>=5.0.0",
+    "pypdf>=4.0.0",
+    "langchain>=0.3.0",
+    "langchain-ollama>=0.2.0",
+    "langchain-core>=0.3.0",
+    "pydantic>=2.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+]
 
 [project.scripts]
 questai = "questai:main"
 
 [build-system]
-requires = ["uv_build>=0.12.6,<0.13.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

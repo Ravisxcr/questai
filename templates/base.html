@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 dark:bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}QuestAI - AI Study Arenas & Quiz Generator{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex flex-col text-slate-800 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'arenas:list' %}" class="flex items-center space-x-2.5 group">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+                            <i class="fa-solid fa-brain text-xl"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">QuestAI</span>
+                            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider -mt-1">Study Arenas & Q&A</span>
+                        </div>
+                    </a>
+
+                    <!-- Navigation Links -->
+                    <nav class="hidden md:flex items-center ml-8 space-x-1">
+                        <a href="{% url 'arenas:list' %}" class="px-3 py-2 rounded-lg text-sm font-medium {% if request.resolver_match.app_name == 'arenas' %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} transition-colors">
+                            <i class="fa-solid fa-layer-group mr-1.5 opacity-70"></i> Arenas
+                        </a>
+                        <a href="{% url 'quizzes:history' %}" class="px-3 py-2 rounded-lg text-sm font-medium {% if request.resolver_match.app_name == 'quizzes' and request.resolver_match.url_name == 'history' %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} transition-colors">
+                            <i class="fa-solid fa-clock-rotate-left mr-1.5 opacity-70"></i> Attempts History
+                        </a>
+                        <a href="{% url 'analytics:dashboard' %}" class="px-3 py-2 rounded-lg text-sm font-medium {% if request.resolver_match.app_name == 'analytics' %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} transition-colors">
+                            <i class="fa-solid fa-chart-pie mr-1.5 opacity-70"></i> Analytics
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Right Header Actions & AI Engine Status -->
+                <div class="flex items-center space-x-3">
+                    
+                    <!-- Ollama Status Pill -->
+                    <div class="hidden sm:flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm" title="Ollama AI Service ({{ OLLAMA_BASE_URL }})">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+                        <span>Ollama: <strong class="font-semibold text-indigo-600 dark:text-indigo-400">{{ OLLAMA_DEFAULT_MODEL }}</strong></span>
+                    </div>
+
+                    <!-- Celery Worker Mode Indicator -->
+                    {% if CELERY_ALWAYS_EAGER %}
+                    <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800" title="Tasks run in eager synchronous mode">
+                        <i class="fa-solid fa-bolt mr-1 text-xs"></i> Eager Mode
+                    </span>
+                    {% else %}
+                    <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" title="Tasks run via Celery worker and Redis broker">
+                        <i class="fa-solid fa-gears mr-1 text-xs"></i> Celery Worker
+                    </span>
+                    {% endif %}
+
+                    <!-- Dark mode toggle -->
+                    <button id="themeToggle" class="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:inline"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Messages / Alerts -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+        {% if messages %}
+            <div class="space-y-2">
+                {% for message in messages %}
+                <div class="flex items-center justify-between p-4 rounded-xl text-sm font-medium border shadow-sm transition-all
+                    {% if message.tags == 'success' %}
+                        bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200
+                    {% elif message.tags == 'error' %}
+                        bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200
+                    {% elif message.tags == 'warning' %}
+                        bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200
+                    {% else %}
+                        bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200
+                    {% endif %}">
+                    <div class="flex items-center space-x-2.5">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info text-indigo-500 text-base"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>QuestAI &copy; 2026 &mdash; AI Study Arenas powered by LangChain & Ollama</p>
+            <p class="flex items-center space-x-3">
+                <span>PDF Extraction: <strong>pypdf</strong></span>
+                <span>•</span>
+                <span>Background Worker: <strong>Celery</strong></span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Theme switcher script -->
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        themeToggle.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

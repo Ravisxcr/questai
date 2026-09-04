@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+class ArenasConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.arenas'
+    verbose_name = 'Arenas & Documents'
+

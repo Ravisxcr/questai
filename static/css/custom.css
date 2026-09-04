@@ -1,0 +1,6 @@
+/* Custom CSS overrides and animation polish */
+.quiz-option-selected {
+    border-color: #6366f1 !important;
+    background-color: rgba(99, 102, 241, 0.08) !important;
+}
+
