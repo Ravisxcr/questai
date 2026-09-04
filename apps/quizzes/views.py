@@ -67,10 +67,25 @@ def take_quiz_view(request, pk):
         
     answers = attempt.answers.select_related('question').all()
 
+    # Serialize questions for interactive React QuizRunner
+    questions_data = [
+        {
+            'id': str(ans.question.id),
+            'answer_id': str(ans.id),
+            'type': ans.question.question_type,
+            'difficulty': ans.question.difficulty,
+            'question': ans.question.question_text,
+            'options': ans.question.options or [],
+            'is_multiagent_verified': ans.question.is_multiagent_verified,
+        }
+        for ans in answers
+    ]
+
     context = {
         'attempt': attempt,
         'arena': attempt.arena,
         'answers': answers,
+        'questions_json': json.dumps(questions_data),
     }
     return render(request, 'quizzes/take_quiz.html', context)
 

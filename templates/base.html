@@ -1,10 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50 dark:bg-slate-900">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}QuestAI - AI Study Arenas & Quiz Generator{% endblock %}</title>
-    <!-- Tailwind CSS CDN -->
+
+    <!-- Immediate Theme Initialization (Prevents FOUC) -->
+    <script>
+        (function() {
+            try {
+                const theme = localStorage.getItem('questai-theme') || 'system';
+                const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <!-- shadcn/ui Design Tokens -->
+    <link rel="stylesheet" href="/static/css/shadcn.css">
+
+    <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,136 +31,191 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                        }
-                    }
-                }
-            }
-        }
+                        background: 'hsl(var(--background) / <alpha-value>)',
+                        foreground: 'hsl(var(--foreground) / <alpha-value>)',
+                        card: {
+                            DEFAULT: 'hsl(var(--card) / <alpha-value>)',
+                            foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+                        },
+                        popover: {
+                            DEFAULT: 'hsl(var(--popover) / <alpha-value>)',
+                            foreground: 'hsl(var(--popover-foreground) / <alpha-value>)',
+                        },
+                        primary: {
+                            DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
+                            foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+                        },
+                        secondary: {
+                            DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
+                            foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
+                            foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+                        },
+                        accent: {
+                            DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
+                            foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+                        },
+                        destructive: {
+                            DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
+                            foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
+                        },
+                        border: 'hsl(var(--border) / <alpha-value>)',
+                        input: 'hsl(var(--input) / <alpha-value>)',
+                        ring: 'hsl(var(--ring) / <alpha-value>)',
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)',
+                        md: 'calc(var(--radius) - 2px)',
+                        sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        };
     </script>
-    <!-- FontAwesome CDN -->
+
+    <!-- FontAwesome & Chart.js CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- React 18, ReactDOM & Babel for in-Django Interactive Components -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Theme Switcher Script -->
+    <script src="/static/js/theme.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: #334155;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
         }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full flex flex-col text-slate-800 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col antialiased selection:bg-primary selection:text-primary-foreground">
 
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+    <!-- Top Navigation Bar (shadcn style) -->
+    <header class="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-sm">
+        <div class="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
                 
                 <!-- Logo & Brand -->
                 <div class="flex items-center space-x-3">
-                    <a href="{% url 'arenas:list' %}" class="flex items-center space-x-2.5 group">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
-                            <i class="fa-solid fa-brain text-xl"></i>
+                    <a href="{% url 'arenas:list' %}" class="flex items-center space-x-2 group">
+                        <div class="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-xs shadow-2xs group-hover:bg-primary/90 transition-colors">
+                            <i class="fa-solid fa-brain"></i>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">QuestAI</span>
-                            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider -mt-1">Study Arenas & Q&A</span>
-                        </div>
+                        <span class="text-sm font-semibold tracking-tight text-foreground">QuestAI</span>
                     </a>
 
                     <!-- Navigation Links -->
-                    <nav class="hidden md:flex items-center ml-8 space-x-1">
-                        <a href="{% url 'arenas:list' %}" class="px-3 py-2 rounded-lg text-sm font-medium {% if request.resolver_match.app_name == 'arenas' %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} transition-colors">
-                            <i class="fa-solid fa-layer-group mr-1.5 opacity-70"></i> Arenas
+                    <nav class="hidden md:flex items-center ml-6 space-x-1">
+                        <a href="{% url 'arenas:list' %}" class="px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'arenas' %}bg-secondary text-foreground font-medium{% else %}text-muted-foreground hover:text-foreground hover:bg-secondary/50{% endif %}">
+                            <i class="fa-solid fa-layer-group mr-1.5 opacity-60 text-xs"></i> Arenas
                         </a>
-                        <a href="{% url 'quizzes:history' %}" class="px-3 py-2 rounded-lg text-sm font-medium {% if request.resolver_match.app_name == 'quizzes' and request.resolver_match.url_name == 'history' %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} transition-colors">
-                            <i class="fa-solid fa-clock-rotate-left mr-1.5 opacity-70"></i> Attempts History
+                        <a href="{% url 'quizzes:history' %}" class="px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'quizzes' and request.resolver_match.url_name == 'history' %}bg-secondary text-foreground font-medium{% else %}text-muted-foreground hover:text-foreground hover:bg-secondary/50{% endif %}">
+                            <i class="fa-solid fa-clock-rotate-left mr-1.5 opacity-60 text-xs"></i> Attempt History
                         </a>
-                        <a href="{% url 'analytics:dashboard' %}" class="px-3 py-2 rounded-lg text-sm font-medium {% if request.resolver_match.app_name == 'analytics' %}bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} transition-colors">
-                            <i class="fa-solid fa-chart-pie mr-1.5 opacity-70"></i> Analytics
+                        <a href="{% url 'analytics:dashboard' %}" class="px-2.5 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'analytics' %}bg-secondary text-foreground font-medium{% else %}text-muted-foreground hover:text-foreground hover:bg-secondary/50{% endif %}">
+                            <i class="fa-solid fa-chart-pie mr-1.5 opacity-60 text-xs"></i> Analytics
                         </a>
                     </nav>
                 </div>
 
-                <!-- Right Header Actions & AI Engine Status -->
+                <!-- Right Header Actions -->
                 <div class="flex items-center space-x-3">
                     
-                    <!-- Ollama Status Pill -->
-                    <div class="hidden sm:flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-sm" title="Ollama AI Service ({{ OLLAMA_BASE_URL }})">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
-                        <span>Ollama: <strong class="font-semibold text-indigo-600 dark:text-indigo-400">{{ OLLAMA_DEFAULT_MODEL }}</strong></span>
+                    <!-- Ollama Status Indicator -->
+                    <div class="hidden sm:flex items-center space-x-2 text-xs text-muted-foreground">
+                        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-secondary/60 border border-border/50 text-[11px]" title="Ollama AI Service: {{ OLLAMA_BASE_URL }} ({{ OLLAMA_DEFAULT_MODEL }})">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="text-muted-foreground">Ollama:</span>
+                            <span class="font-medium text-foreground">{{ OLLAMA_DEFAULT_MODEL }}</span>
+                        </div>
+                        {% if CELERY_ALWAYS_EAGER %}
+                        <span class="hidden xl:inline-flex items-center px-2 py-0.5 rounded text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20" title="Tasks run in eager synchronous mode">
+                            eager
+                        </span>
+                        {% endif %}
                     </div>
 
-                    <!-- Celery Worker Mode Indicator -->
-                    {% if CELERY_ALWAYS_EAGER %}
-                    <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800" title="Tasks run in eager synchronous mode">
-                        <i class="fa-solid fa-bolt mr-1 text-xs"></i> Eager Mode
-                    </span>
-                    {% else %}
-                    <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" title="Tasks run via Celery worker and Redis broker">
-                        <i class="fa-solid fa-gears mr-1 text-xs"></i> Celery Worker
-                    </span>
-                    {% endif %}
+                    <!-- shadcn 3-Mode Theme Selector Dropdown -->
+                    <div class="relative">
+                        <button id="themeDropdownBtn" onclick="document.getElementById('themeMenu').classList.toggle('hidden')"
+                            class="h-8 w-8 rounded-md border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Toggle Theme">
+                            <i id="themeIconLight" class="fa-solid fa-sun text-xs hidden"></i>
+                            <i id="themeIconDark" class="fa-solid fa-moon text-xs hidden"></i>
+                            <i id="themeIconSystem" class="fa-solid fa-desktop text-xs hidden"></i>
+                        </button>
 
-                    <!-- Dark mode toggle -->
-                    <button id="themeToggle" class="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
-                        <i class="fa-solid fa-moon dark:hidden"></i>
-                        <i class="fa-solid fa-sun hidden dark:inline"></i>
-                    </button>
+                        <div id="themeMenu" class="hidden absolute right-0 mt-2 w-36 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md z-50 text-xs font-medium">
+                            <button onclick="window.ThemeManager.set('light'); document.getElementById('themeMenu').classList.add('hidden')"
+                                data-theme-value="light" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left">
+                                <span class="flex items-center"><i class="fa-solid fa-sun mr-2 w-4 text-center"></i> Light</span>
+                                <i class="fa-solid fa-check theme-check text-[10px] text-primary opacity-0"></i>
+                            </button>
+                            <button onclick="window.ThemeManager.set('dark'); document.getElementById('themeMenu').classList.add('hidden')"
+                                data-theme-value="dark" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left">
+                                <span class="flex items-center"><i class="fa-solid fa-moon mr-2 w-4 text-center"></i> Dark</span>
+                                <i class="fa-solid fa-check theme-check text-[10px] text-primary opacity-0"></i>
+                            </button>
+                            <button onclick="window.ThemeManager.set('system'); document.getElementById('themeMenu').classList.add('hidden')"
+                                data-theme-value="system" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left">
+                                <span class="flex items-center"><i class="fa-solid fa-desktop mr-2 w-4 text-center"></i> System</span>
+                                <i class="fa-solid fa-check theme-check text-[10px] text-primary opacity-0"></i>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Global Messages / Alerts -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+    <!-- Close theme dropdown on outside click -->
+    <script>
+        document.addEventListener('click', function(e) {
+            const btn = document.getElementById('themeDropdownBtn');
+            const menu = document.getElementById('themeMenu');
+            if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+
+    <!-- Global Messages / Alerts (shadcn Alert style) -->
+    <div class="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                <div class="flex items-center justify-between p-4 rounded-xl text-sm font-medium border shadow-sm transition-all
+                <div class="flex items-center justify-between p-4 rounded-lg text-sm border shadow-sm transition-all
                     {% if message.tags == 'success' %}
-                        bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200
+                        bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300
                     {% elif message.tags == 'error' %}
-                        bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200
+                        bg-destructive/10 border-destructive/20 text-destructive
                     {% elif message.tags == 'warning' %}
-                        bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200
+                        bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300
                     {% else %}
-                        bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200
+                        bg-primary/10 border-primary/20 text-primary
                     {% endif %}">
                     <div class="flex items-center space-x-2.5">
                         {% if message.tags == 'success' %}
-                            <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+                            <i class="fa-solid fa-circle-check text-emerald-500"></i>
                         {% elif message.tags == 'error' %}
-                            <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+                            <i class="fa-solid fa-circle-exclamation text-destructive"></i>
                         {% elif message.tags == 'warning' %}
-                            <i class="fa-solid fa-triangle-exclamation text-amber-500 text-base"></i>
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
                         {% else %}
-                            <i class="fa-solid fa-circle-info text-indigo-500 text-base"></i>
+                            <i class="fa-solid fa-circle-info text-primary"></i>
                         {% endif %}
-                        <span>{{ message }}</span>
+                        <span class="font-medium">{{ message }}</span>
                     </div>
-                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                    <button onclick="this.parentElement.remove()" class="text-muted-foreground hover:text-foreground p-1">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -151,14 +225,14 @@
     </div>
 
     <!-- Main Content Area -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-1 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>QuestAI &copy; 2026 &mdash; AI Study Arenas powered by LangChain & Ollama</p>
+    <footer class="border-t border-border bg-card py-6 text-center text-xs text-muted-foreground">
+        <div class="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>QuestAI &copy; 2026 &mdash; AI Study Arenas with Multi-Agent Verification (LangChain & Ollama)</p>
             <p class="flex items-center space-x-3">
                 <span>PDF Extraction: <strong>pypdf</strong></span>
                 <span>•</span>
@@ -167,25 +241,6 @@
         </div>
     </footer>
 
-    <!-- Theme switcher script -->
-    <script>
-        const themeToggle = document.getElementById('themeToggle');
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        themeToggle.addEventListener('click', () => {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.theme = 'light';
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.theme = 'dark';
-            }
-        });
-    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

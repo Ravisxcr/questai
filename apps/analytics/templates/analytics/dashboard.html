@@ -3,76 +3,76 @@
 {% block title %}Study Analytics & Insights - QuestAI{% endblock %}
 
 {% block content %}
-<div class="space-y-8 pb-16">
+<div class="space-y-6 pb-16">
 
-    <!-- Dashboard Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+    <!-- Dashboard Header (shadcn style) -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Study Analytics</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Visualize learning progression, quiz score trends, and Arena performance metrics.</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Study Analytics</h1>
+            <p class="text-sm text-muted-foreground mt-1">Visualize learning progression, quiz score trends, and Arena performance metrics.</p>
         </div>
         <div class="flex items-center space-x-2">
-            <span class="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                <i class="fa-solid fa-chart-line mr-1"></i> Live Metrics
+            <span class="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                <i class="fa-solid fa-chart-line mr-1"></i> Live Analytics
             </span>
         </div>
     </div>
 
-    <!-- 6 KPI Stat Cards Grid -->
+    <!-- 6 KPI Stat Cards Grid (shadcn Cards) -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         
         <!-- Total Arenas -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-            <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm mb-2 font-bold">
+        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs p-4 space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-bold mb-2">
                 <i class="fa-solid fa-layer-group"></i>
             </div>
-            <span class="block text-2xl font-black text-slate-900 dark:text-white">{{ total_arenas }}</span>
-            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Arenas</span>
+            <span class="block text-xl sm:text-2xl font-black text-foreground">{{ total_arenas }}</span>
+            <span class="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Arenas</span>
         </div>
 
         <!-- Total Documents -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-            <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm mb-2 font-bold">
+        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs p-4 space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center text-sm font-bold mb-2">
                 <i class="fa-solid fa-file-pdf"></i>
             </div>
-            <span class="block text-2xl font-black text-slate-900 dark:text-white">{{ total_documents }}</span>
-            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">PDFs Ingested</span>
+            <span class="block text-xl sm:text-2xl font-black text-foreground">{{ total_documents }}</span>
+            <span class="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">PDFs Ingested</span>
         </div>
 
         <!-- Total Questions -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-            <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm mb-2 font-bold">
+        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs p-4 space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center text-sm font-bold mb-2">
                 <i class="fa-solid fa-circle-question"></i>
             </div>
-            <span class="block text-2xl font-black text-slate-900 dark:text-white">{{ total_questions }}</span>
-            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Questions</span>
+            <span class="block text-xl sm:text-2xl font-black text-foreground">{{ total_questions }}</span>
+            <span class="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Questions</span>
         </div>
 
         <!-- Total Attempts -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm mb-2 font-bold">
+        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs p-4 space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center text-sm font-bold mb-2">
                 <i class="fa-solid fa-trophy"></i>
             </div>
-            <span class="block text-2xl font-black text-slate-900 dark:text-white">{{ total_attempts }}</span>
-            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Quiz Attempts</span>
+            <span class="block text-xl sm:text-2xl font-black text-foreground">{{ total_attempts }}</span>
+            <span class="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Attempts</span>
         </div>
 
         <!-- Average Score -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-            <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm mb-2 font-bold">
+        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs p-4 space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-sm font-bold mb-2">
                 <i class="fa-solid fa-percent"></i>
             </div>
-            <span class="block text-2xl font-black text-slate-900 dark:text-white">{{ avg_score }}%</span>
-            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Average Score</span>
+            <span class="block text-xl sm:text-2xl font-black text-foreground">{{ avg_score }}%</span>
+            <span class="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Avg Score</span>
         </div>
 
         <!-- Study Time -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-            <div class="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm mb-2 font-bold">
+        <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs p-4 space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center text-sm font-bold mb-2">
                 <i class="fa-solid fa-stopwatch"></i>
             </div>
-            <span class="block text-2xl font-black text-slate-900 dark:text-white">{{ study_time_display }}</span>
-            <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Study Time</span>
+            <span class="block text-xl sm:text-2xl font-black text-foreground">{{ study_time_display }}</span>
+            <span class="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Study Time</span>
         </div>
 
     </div>
@@ -81,11 +81,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <!-- Score Progression Timeline (col-span-8) -->
-        <div class="lg:col-span-8 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+        <div class="lg:col-span-8 bg-card text-card-foreground rounded-xl border border-border shadow-xs p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Score Progression Over Time</h2>
-                    <p class="text-xs text-slate-400">Chronological accuracy trend across completed quiz attempts</p>
+                    <h2 class="text-base font-bold text-foreground">Score Progression Over Time</h2>
+                    <p class="text-xs text-muted-foreground">Chronological accuracy trend across completed quiz attempts</p>
                 </div>
             </div>
             <div class="h-64 w-full">
@@ -94,81 +94,81 @@
         </div>
 
         <!-- Question Types Breakdown (col-span-4) -->
-        <div class="lg:col-span-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+        <div class="lg:col-span-4 bg-card text-card-foreground rounded-xl border border-border shadow-xs p-5 sm:p-6 space-y-4">
             <div>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white">Questions by Type</h2>
-                <p class="text-xs text-slate-400">Distribution of generated question types</p>
+                <h2 class="text-base font-bold text-foreground">Questions by Type</h2>
+                <p class="text-xs text-muted-foreground">Distribution of generated question types</p>
             </div>
-            <div class="h-56 w-full flex items-center justify-center">
+            <div class="h-52 w-full flex items-center justify-center">
                 <canvas id="questionTypesChart"></canvas>
             </div>
-            <div class="grid grid-cols-3 gap-2 text-center text-xs pt-2 border-t border-slate-100 dark:border-slate-700">
+            <div class="grid grid-cols-3 gap-2 text-center text-xs pt-2 border-t border-border">
                 <div>
                     <span class="font-bold text-blue-500">{{ mcq_count }}</span>
-                    <span class="block text-[10px] text-slate-400">MCQs</span>
+                    <span class="block text-[10px] text-muted-foreground">MCQs</span>
                 </div>
                 <div>
                     <span class="font-bold text-amber-500">{{ short_count }}</span>
-                    <span class="block text-[10px] text-slate-400">Short</span>
+                    <span class="block text-[10px] text-muted-foreground">Short</span>
                 </div>
                 <div>
                     <span class="font-bold text-purple-500">{{ long_count }}</span>
-                    <span class="block text-[10px] text-slate-400">Long</span>
+                    <span class="block text-[10px] text-muted-foreground">Long</span>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Arena Performance Comparison Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+    <!-- Arena Performance Comparison Table (shadcn Table) -->
+    <div class="bg-card text-card-foreground rounded-xl border border-border shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-border flex items-center justify-between">
             <div>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white">Arena Performance Summary</h2>
-                <p class="text-xs text-slate-400">Comparison of activity and scores across each study workspace</p>
+                <h2 class="text-base font-bold text-foreground">Arena Performance Summary</h2>
+                <p class="text-xs text-muted-foreground">Comparison of activity and scores across each study workspace</p>
             </div>
-            <a href="{% url 'arenas:list' %}" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+            <a href="{% url 'arenas:list' %}" class="text-xs font-semibold text-primary hover:underline">
                 View All Arenas &rarr;
             </a>
         </div>
 
         {% if arena_stats %}
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                <thead class="bg-slate-50 dark:bg-slate-900/60 text-xs uppercase font-bold text-slate-400 border-b border-slate-200 dark:border-slate-700">
+            <table class="w-full text-left text-xs sm:text-sm">
+                <thead class="bg-muted/60 text-[10px] uppercase font-bold text-muted-foreground border-b border-border">
                     <tr>
-                        <th class="px-6 py-4">Arena Name</th>
-                        <th class="px-6 py-4">PDFs</th>
-                        <th class="px-6 py-4">Questions</th>
-                        <th class="px-6 py-4">Quiz Attempts</th>
-                        <th class="px-6 py-4">Average Score</th>
-                        <th class="px-6 py-4">Best Score</th>
-                        <th class="px-6 py-4 text-right">Workspace</th>
+                        <th class="px-5 py-3">Arena Name</th>
+                        <th class="px-5 py-3">PDFs</th>
+                        <th class="px-5 py-3">Questions</th>
+                        <th class="px-5 py-3">Quiz Attempts</th>
+                        <th class="px-5 py-3">Average Score</th>
+                        <th class="px-5 py-3">Best Score</th>
+                        <th class="px-5 py-3 text-right">Workspace</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                <tbody class="divide-y divide-border">
                     {% for item in arena_stats %}
-                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                    <tr class="hover:bg-muted/40 transition-colors">
+                        <td class="px-5 py-4 font-bold text-foreground">
                             {{ item.arena.name }}
                         </td>
-                        <td class="px-6 py-4 text-xs">{{ item.doc_count }}</td>
-                        <td class="px-6 py-4 text-xs font-semibold text-indigo-600 dark:text-indigo-400">{{ item.q_count }}</td>
-                        <td class="px-6 py-4 text-xs">{{ item.att_count }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-4 text-xs text-muted-foreground">{{ item.doc_count }}</td>
+                        <td class="px-5 py-4 text-xs font-semibold text-primary">{{ item.q_count }}</td>
+                        <td class="px-5 py-4 text-xs text-muted-foreground">{{ item.att_count }}</td>
+                        <td class="px-5 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
-                                {% if item.avg_score >= 80 %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300
-                                {% elif item.avg_score >= 60 %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300
-                                {% else %}bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300{% endif %}">
+                                {% if item.avg_score >= 80 %}bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30
+                                {% elif item.avg_score >= 60 %}bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30
+                                {% else %}bg-secondary text-secondary-foreground border border-border{% endif %}">
                                 {{ item.avg_score }}%
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <td class="px-5 py-4 text-xs font-bold text-foreground">
                             {{ item.best_score }}%
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-5 py-4 text-right">
                             <a href="{% url 'arenas:detail' item.arena.id %}"
-                                class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 transition-colors">
+                                class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-colors">
                                 Open Workspace
                             </a>
                         </td>
@@ -178,7 +178,7 @@
             </table>
         </div>
         {% else %}
-        <div class="text-center py-12 text-slate-400 text-xs">
+        <div class="text-center py-12 text-muted-foreground text-xs">
             No arenas found. Create an arena to start viewing analytics.
         </div>
         {% endif %}
@@ -189,6 +189,11 @@
 
 {% block extra_js %}
 <script>
+    // Theme-adaptive Chart.js defaults
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(100, 116, 139, 0.1)';
+
     // Chart 1: Score Progression Over Time
     const timelineLabels = {{ chart_labels_json|safe }};
     const timelineScores = {{ chart_scores_json|safe }};
@@ -201,12 +206,12 @@
             datasets: [{
                 label: 'Quiz Score (%)',
                 data: timelineScores.length > 0 ? timelineScores : [0],
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                borderWidth: 3,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                borderWidth: 2.5,
                 tension: 0.35,
                 fill: true,
-                pointBackgroundColor: '#4f46e5',
+                pointBackgroundColor: '#6366f1',
                 pointRadius: 4,
             }]
         },
@@ -217,11 +222,15 @@
                 y: {
                     min: 0,
                     max: 100,
-                    grid: { color: 'rgba(156, 163, 175, 0.15)' },
-                    ticks: { callback: v => v + '%' }
+                    grid: { color: gridColor },
+                    ticks: {
+                        color: textColor,
+                        callback: v => v + '%'
+                    }
                 },
                 x: {
-                    grid: { display: false }
+                    grid: { display: false },
+                    ticks: { color: textColor }
                 }
             },
             plugins: {
@@ -249,7 +258,11 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { boxWidth: 12, font: { size: 11 } }
+                    labels: {
+                        color: textColor,
+                        boxWidth: 10,
+                        font: { size: 11 }
+                    }
                 }
             },
             cutout: '70%'
@@ -257,4 +270,3 @@
     });
 </script>
 {% endblock %}
-

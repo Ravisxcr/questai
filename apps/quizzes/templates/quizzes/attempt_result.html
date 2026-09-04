@@ -3,51 +3,51 @@
 {% block title %}Quiz Results - {{ arena.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8 pb-16">
+<div class="max-w-4xl mx-auto space-y-6 pb-16">
 
-    <!-- Header Score Card -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl p-6 sm:p-8 relative overflow-hidden">
+    <!-- Header Score Card (shadcn Card style) -->
+    <div class="bg-card text-card-foreground rounded-2xl border border-border shadow-sm p-6 sm:p-8 relative overflow-hidden">
         
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             
             <!-- Score & Grade Badge -->
             <div class="flex items-center space-x-5">
-                <div class="w-24 h-24 rounded-3xl flex flex-col items-center justify-center font-extrabold shadow-lg
-                    {% if attempt.score_percentage >= 80 %}bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-emerald-500/20
-                    {% elif attempt.score_percentage >= 60 %}bg-gradient-to-tr from-amber-500 to-yellow-500 text-white shadow-amber-500/20
-                    {% else %}bg-gradient-to-tr from-rose-600 to-pink-500 text-white shadow-rose-500/20{% endif %}">
-                    <span id="scorePercentageDisplay" class="text-2xl tracking-tight">{{ attempt.score_percentage }}%</span>
-                    <span class="text-[10px] uppercase tracking-wider font-semibold opacity-90">Grade {{ attempt.grade }}</span>
+                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex flex-col items-center justify-center font-extrabold shadow-sm
+                    {% if attempt.score_percentage >= 80 %}bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400
+                    {% elif attempt.score_percentage >= 60 %}bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400
+                    {% else %}bg-destructive/15 border border-destructive/30 text-destructive{% endif %}">
+                    <span id="scorePercentageDisplay" class="text-xl sm:text-2xl tracking-tight">{{ attempt.score_percentage }}%</span>
+                    <span class="text-[10px] uppercase tracking-wider font-semibold opacity-80">Grade {{ attempt.grade }}</span>
                 </div>
 
                 <div class="space-y-1">
-                    <span class="text-xs uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Attempt Completed</span>
-                    <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{{ arena.name }}</h1>
-                    <div class="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 pt-0.5">
-                        <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i> {{ attempt.formatted_duration }}</span>
-                        <span>•</span>
-                        <span><i class="fa-regular fa-calendar mr-1 text-slate-400"></i> {{ attempt.completed_at|date:"M d, Y - H:i" }}</span>
+                    <span class="text-[10px] uppercase font-bold text-primary tracking-wider">Attempt Completed</span>
+                    <h1 class="text-xl sm:text-2xl font-black text-foreground tracking-tight">{{ arena.name }}</h1>
+                    <div class="flex items-center space-x-3 text-xs text-muted-foreground pt-0.5">
+                        <span><i class="fa-regular fa-clock mr-1"></i> {{ attempt.formatted_duration }}</span>
+                        <span>&bull;</span>
+                        <span><i class="fa-regular fa-calendar mr-1"></i> {{ attempt.completed_at|date:"M d, Y - H:i" }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Stats Chips & Actions -->
             <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                <div class="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-center">
-                    <span class="block text-xs font-semibold text-slate-400 uppercase">MCQ Accuracy</span>
-                    <span class="text-base font-bold text-slate-900 dark:text-white">{{ attempt.correct_mcq_count }} / {{ attempt.total_mcq_count }}</span>
+                <div class="px-4 py-2 rounded-lg bg-muted/60 border border-border text-center">
+                    <span class="block text-[10px] font-semibold text-muted-foreground uppercase">MCQ Accuracy</span>
+                    <span class="text-sm sm:text-base font-bold text-foreground">{{ attempt.correct_mcq_count }} / {{ attempt.total_mcq_count }}</span>
                 </div>
 
                 <div class="flex items-center space-x-2">
                     <form method="POST" action="{% url 'quizzes:start' arena.id %}">
                         {% csrf_token %}
                         <input type="hidden" name="filter_type" value="{{ attempt.question_filter }}">
-                        <button type="submit" class="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all">
-                            <i class="fa-solid fa-rotate-right mr-1.5"></i> Retake
+                        <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-all">
+                            <i class="fa-solid fa-rotate-right mr-1.5 text-[10px]"></i> Retake
                         </button>
                     </form>
 
-                    <a href="{% url 'arenas:detail' arena.id %}" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                    <a href="{% url 'arenas:detail' arena.id %}" class="px-4 py-2 rounded-lg text-xs font-semibold text-foreground bg-secondary hover:bg-secondary/80 border border-border transition-colors">
                         Back to Arena
                     </a>
                 </div>
@@ -58,112 +58,114 @@
     </div>
 
     <!-- Questions Review Header -->
-    <div class="flex items-center justify-between">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Question Review & Explanations</h2>
-        <span class="text-xs text-slate-400">{{ answers.count }} Questions Assessed</span>
+    <div class="flex items-center justify-between pt-2">
+        <h2 class="text-base sm:text-lg font-bold text-foreground">Question Review & Explanations</h2>
+        <span class="text-xs text-muted-foreground">{{ answers.count }} Questions Assessed</span>
     </div>
 
     <!-- Questions Breakdown List -->
-    <div class="space-y-6">
+    <div class="space-y-5">
         {% for ans in answers %}
         {% with q=ans.question %}
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 sm:p-7 space-y-4">
+        <div class="bg-card text-card-foreground rounded-2xl border border-border shadow-xs p-5 sm:p-6 space-y-4">
             
             <!-- Card Header: Number, Status & Type -->
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
-                <div class="flex items-center space-x-2.5">
-                    <span class="text-xs font-bold text-slate-400">#{{ forloop.counter }}</span>
-                    <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider
-                        {% if q.is_mcq %}bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300
-                        {% elif q.is_short %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300
-                        {% else %}bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300{% endif %}">
+            <div class="flex items-center justify-between pb-3 border-b border-border">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-muted-foreground">#{{ forloop.counter }}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider
+                        {% if q.is_mcq %}bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20
+                        {% elif q.is_short %}bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20
+                        {% else %}bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20{% endif %}">
                         {{ q.get_question_type_display }}
                     </span>
+                    {% if q.is_multiagent_verified %}
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center">
+                        <i class="fa-solid fa-shield-halved mr-1 text-[9px] text-emerald-500"></i> Multi-Agent Verified
+                    </span>
+                    {% endif %}
                 </div>
 
                 <!-- Correctness Badge -->
                 {% if q.is_mcq %}
                     {% if ans.is_correct %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                        <i class="fa-solid fa-check mr-1.5"></i> Correct
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                        <i class="fa-solid fa-check mr-1 text-[10px]"></i> Correct
                     </span>
                     {% else %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
-                        <i class="fa-solid fa-xmark mr-1.5"></i> Incorrect
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive/15 text-destructive border border-destructive/30">
+                        <i class="fa-solid fa-xmark mr-1 text-[10px]"></i> Incorrect
                     </span>
                     {% endif %}
                 {% else %}
-                    <span id="badge-{{ ans.id }}" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-                        {% if ans.is_correct == True %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300
-                        {% elif ans.is_correct == False %}bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300
-                        {% else %}bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300{% endif %}">
-                        {% if ans.is_correct == True %}<i class="fa-solid fa-check mr-1.5"></i> Self-Rated: Correct
-                        {% elif ans.is_correct == False %}<i class="fa-solid fa-xmark mr-1.5"></i> Needs Review
-                        {% else %}<i class="fa-solid fa-pen-ruler mr-1.5"></i> Self-Assessment
+                    <span id="badge-{{ ans.id }}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
+                        {% if ans.is_correct == True %}bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30
+                        {% elif ans.is_correct == False %}bg-destructive/15 text-destructive border border-destructive/30
+                        {% else %}bg-secondary text-secondary-foreground border border-border{% endif %}">
+                        {% if ans.is_correct == True %}<i class="fa-solid fa-check mr-1 text-[10px]"></i> Self-Rated: Correct
+                        {% elif ans.is_correct == False %}<i class="fa-solid fa-xmark mr-1 text-[10px]"></i> Needs Review
+                        {% else %}<i class="fa-solid fa-pen-ruler mr-1 text-[10px]"></i> Self-Assessment
                         {% endif %}
                     </span>
                 {% endif %}
             </div>
 
             <!-- Question Prompt -->
-            <p class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white leading-relaxed">
+            <p class="text-sm sm:text-base font-semibold text-foreground leading-relaxed">
                 {{ q.question_text }}
             </p>
 
             <!-- User's Answer vs Model Answer -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <!-- User Answer -->
-                <div class="p-3.5 rounded-xl border text-xs
-                    {% if q.is_mcq and ans.is_correct %}bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200
-                    {% elif q.is_mcq and not ans.is_correct %}bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200
-                    {% else %}bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200{% endif %}">
-                    <span class="block font-bold uppercase tracking-wider text-[10px] text-slate-400 mb-1">Your Answer:</span>
-                    <p class="font-medium whitespace-pre-line">{{ ans.user_answer|default:"(No answer provided)" }}</p>
+                <div class="p-3 rounded-xl border text-xs
+                    {% if q.is_mcq and ans.is_correct %}bg-emerald-500/10 border-emerald-500/20 text-foreground
+                    {% elif q.is_mcq and not ans.is_correct %}bg-destructive/10 border-destructive/20 text-foreground
+                    {% else %}bg-secondary/40 border-border text-foreground{% endif %}">
+                    <span class="block font-bold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">Your Answer:</span>
+                    <p class="font-medium whitespace-pre-line leading-relaxed">{{ ans.user_answer|default:"(No answer provided)" }}</p>
                 </div>
 
                 <!-- Model / Correct Answer -->
-                <div class="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-950 dark:text-indigo-200 text-xs">
+                <div class="p-3 rounded-xl bg-primary/5 border border-primary/20 text-foreground text-xs">
                     <div class="flex items-center justify-between mb-1">
-                        <span class="font-bold uppercase tracking-wider text-[10px] text-indigo-400">Model Correct Answer:</span>
-                        {% if q.is_multiagent_verified %}
-                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
-                            <i class="fa-solid fa-shield-halved mr-1"></i> Multi-Agent Verified
-                        </span>
-                        {% endif %}
+                        <span class="font-bold uppercase tracking-wider text-[10px] text-primary">Model Answer:</span>
                     </div>
-                    <p class="font-medium whitespace-pre-line">{{ q.correct_answer }}</p>
+                    <p class="font-semibold text-primary whitespace-pre-line leading-relaxed">{{ q.correct_answer }}</p>
                 </div>
             </div>
 
-            <!-- Deep Reasoning & Distractor Breakdown Accordion -->
+            <!-- Deep Reasoning & Distractor Breakdown -->
             {% if q.step_by_step_reasoning or q.distractor_analysis or q.grounding_evidence %}
-            <div class="p-3.5 rounded-xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+            <div class="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs text-foreground">
                 {% if q.grounding_evidence %}
-                <div class="border-l-2 border-indigo-500 pl-2">
-                    <span class="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Source Evidence:</span>
-                    <p class="italic text-slate-600 dark:text-slate-400 text-xs">"{{ q.grounding_evidence }}"</p>
+                <div class="border-l-2 border-primary pl-2.5">
+                    <span class="font-bold text-[10px] text-muted-foreground uppercase tracking-wider block mb-0.5">Source Evidence:</span>
+                    <p class="italic text-muted-foreground text-xs leading-relaxed">"{{ q.grounding_evidence }}"</p>
                 </div>
                 {% endif %}
 
                 {% if q.step_by_step_reasoning %}
-                <div>
-                    <span class="font-bold text-slate-900 dark:text-white flex items-center">
-                        <i class="fa-solid fa-route mr-1.5 text-indigo-500 text-[10px]"></i> Step-by-Step Deductive Reasoning:
+                <div class="space-y-1">
+                    <span class="font-bold text-foreground flex items-center">
+                        <i class="fa-solid fa-route mr-1.5 text-primary text-[10px]"></i> Step-by-Step Deductive Reasoning:
                     </span>
-                    <p class="mt-0.5 text-slate-600 dark:text-slate-400 whitespace-pre-line">{{ q.step_by_step_reasoning }}</p>
+                    <p class="text-muted-foreground whitespace-pre-line leading-relaxed bg-background/60 p-2.5 rounded-lg border border-border">
+                        {{ q.step_by_step_reasoning }}
+                    </p>
                 </div>
                 {% endif %}
 
                 {% if q.distractor_analysis %}
-                <div class="space-y-1">
-                    <span class="font-bold text-slate-900 dark:text-white flex items-center">
+                <div class="space-y-1.5">
+                    <span class="font-bold text-foreground flex items-center">
                         <i class="fa-solid fa-magnifying-glass-chart mr-1.5 text-rose-500 text-[10px]"></i> Why Other Choices Are Incorrect:
                     </span>
                     <div class="space-y-1">
                         {% for opt, reason in q.distractor_analysis.items %}
-                        <div class="p-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div class="p-2 rounded-lg bg-rose-500/5 border border-rose-500/15 text-xs">
                             <span class="font-semibold text-rose-600 dark:text-rose-400">&bull; {{ opt }}:</span>
-                            <span class="text-slate-600 dark:text-slate-400 ml-1">{{ reason }}</span>
+                            <span class="text-muted-foreground ml-1">{{ reason }}</span>
                         </div>
                         {% endfor %}
                     </div>
@@ -174,19 +176,19 @@
 
             <!-- Explanation & Rubric -->
             {% if q.explanation or q.key_points %}
-            <div class="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700/60 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+            <div class="p-3.5 rounded-xl bg-secondary/30 border border-border space-y-2 text-xs text-muted-foreground">
                 {% if q.explanation %}
                 <div>
-                    <span class="font-bold text-slate-900 dark:text-white">Explanation:</span>
-                    <p class="mt-0.5 text-slate-600 dark:text-slate-400">{{ q.explanation }}</p>
+                    <span class="font-bold text-foreground block mb-0.5">Explanation:</span>
+                    <p class="leading-relaxed">{{ q.explanation }}</p>
                 </div>
                 {% endif %}
                 {% if q.key_points %}
                 <div>
-                    <span class="font-bold text-slate-900 dark:text-white">Key Concepts / Rubric:</span>
-                    <div class="flex flex-wrap gap-1.5 mt-1">
+                    <span class="font-bold text-foreground block mb-1">Key Concepts / Rubric:</span>
+                    <div class="flex flex-wrap gap-1">
                         {% for kp in q.key_points %}
-                        <span class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-300 text-[11px] font-medium">
+                        <span class="px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-[10px] font-medium border border-border">
                             • {{ kp }}
                         </span>
                         {% endfor %}
@@ -198,16 +200,16 @@
 
             <!-- Interactive Self-Assessment for Subjective Questions -->
             {% if not q.is_mcq %}
-            <div class="pt-2 flex items-center justify-between text-xs border-t border-slate-100 dark:border-slate-700">
-                <span class="text-slate-400 font-medium">Evaluate your answer against the rubric:</span>
+            <div class="pt-2 flex items-center justify-between text-xs border-t border-border">
+                <span class="text-muted-foreground font-medium">Evaluate your answer against the rubric:</span>
                 <div class="flex items-center space-x-2">
                     <button onclick="gradeSubjective('{{ attempt.id }}', '{{ ans.id }}', true)"
-                        class="px-3 py-1.5 rounded-lg font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 transition-colors">
-                        <i class="fa-solid fa-check mr-1"></i> Understood Well
+                        class="px-3 py-1.5 rounded-lg font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors">
+                        <i class="fa-solid fa-check mr-1 text-[10px]"></i> Understood Well
                     </button>
                     <button onclick="gradeSubjective('{{ attempt.id }}', '{{ ans.id }}', false)"
-                        class="px-3 py-1.5 rounded-lg font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 hover:bg-rose-100 border border-rose-200 dark:border-rose-800 transition-colors">
-                        <i class="fa-solid fa-xmark mr-1"></i> Needs Practice
+                        class="px-3 py-1.5 rounded-lg font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 transition-colors">
+                        <i class="fa-solid fa-xmark mr-1 text-[10px]"></i> Needs Practice
                     </button>
                 </div>
             </div>
@@ -241,14 +243,13 @@
                 const badge = document.getElementById(`badge-${answerId}`);
                 if (badge) {
                     if (isCorrect) {
-                        badge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300";
-                        badge.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> Self-Rated: Correct';
+                        badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30";
+                        badge.innerHTML = '<i class="fa-solid fa-check mr-1 text-[10px]"></i> Self-Rated: Correct';
                     } else {
-                        badge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300";
-                        badge.innerHTML = '<i class="fa-solid fa-xmark mr-1.5"></i> Needs Review';
+                        badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive/15 text-destructive border border-destructive/30";
+                        badge.innerHTML = '<i class="fa-solid fa-xmark mr-1 text-[10px]"></i> Needs Review';
                     }
                 }
-                // Update overall score on page
                 if (data.updated_score !== undefined) {
                     document.getElementById('scorePercentageDisplay').textContent = `${data.updated_score}%`;
                 }
@@ -259,4 +260,3 @@
     }
 </script>
 {% endblock %}
-

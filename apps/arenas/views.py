@@ -1,3 +1,4 @@
+import json
 import uuid
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseNotAllowed
@@ -106,10 +107,32 @@ def arena_detail_view(request, pk):
     available_models = get_available_models()
     ollama_info = get_ollama_status()
 
+    # Serialize questions for interactive React QuestionExplorer
+    all_arena_questions = arena.questions.all()
+    questions_data = [
+        {
+            'id': str(q.id),
+            'type': q.question_type,
+            'difficulty': q.difficulty,
+            'question': q.question_text,
+            'options': q.options or [],
+            'correct_answer': q.correct_answer,
+            'explanation': q.explanation,
+            'key_points': q.key_points or [],
+            'step_by_step_reasoning': q.step_by_step_reasoning,
+            'distractor_analysis': q.distractor_analysis or {},
+            'grounding_evidence': q.grounding_evidence,
+            'is_multiagent_verified': q.is_multiagent_verified,
+            'created_at': q.created_at.strftime("%b %d, %Y"),
+        }
+        for q in all_arena_questions
+    ]
+
     context = {
         'arena': arena,
         'documents': documents,
         'questions': questions,
+        'questions_json': json.dumps(questions_data),
         'selected_type': q_type,
         'search_query': q_search,
         'recent_attempts': recent_attempts,

@@ -120,3 +120,35 @@ class ViewIntegrationTests(TestCase):
         self.assertContains(resp, "Study Analytics")
         self.assertContains(resp, "Quantum Physics")
 
+    def test_react_components_and_shadcn_theming(self):
+        """Verify React components, JSON hydration tags, and shadcn theme assets are served."""
+        # 1. Arena Detail with React QuestionExplorer
+        resp_detail = self.client.get(reverse('arenas:detail', kwargs={'pk': str(self.arena.id)}))
+        self.assertEqual(resp_detail.status_code, 200)
+        self.assertIn('questions_json', resp_detail.context)
+        q_data = json.loads(resp_detail.context['questions_json'])
+        self.assertEqual(len(q_data), 2)
+        self.assertContains(resp_detail, 'id="react-question-explorer"')
+        self.assertContains(resp_detail, 'id="arena-questions-data"')
+        self.assertContains(resp_detail, 'QuestionExplorer.jsx')
+        self.assertContains(resp_detail, 'TaskProgressBanner.jsx')
+        self.assertContains(resp_detail, '/static/css/shadcn.css')
+        self.assertContains(resp_detail, '/static/js/theme.js')
+        self.assertContains(resp_detail, 'ThemeManager')
+
+        # 2. Quiz Taking view with React QuizRunner
+        self.client.post(
+            reverse('quizzes:start', kwargs={'arena_pk': str(self.arena.id)}),
+            data={'filter_type': 'ALL', 'limit': '0'}
+        )
+        attempt = QuizAttempt.objects.first()
+        resp_take = self.client.get(reverse('quizzes:take', kwargs={'pk': str(attempt.id)}))
+        self.assertEqual(resp_take.status_code, 200)
+        self.assertIn('questions_json', resp_take.context)
+        runner_data = json.loads(resp_take.context['questions_json'])
+        self.assertEqual(len(runner_data), 2)
+        self.assertContains(resp_take, 'id="react-quiz-runner"')
+        self.assertContains(resp_take, 'id="quiz-questions-data"')
+        self.assertContains(resp_take, 'QuizRunner.jsx')
+
+

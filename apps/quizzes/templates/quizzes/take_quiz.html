@@ -3,120 +3,89 @@
 {% block title %}Taking Quiz: {{ arena.name }} - QuestAI{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-6 pb-16">
+<div class="w-full space-y-6 pb-16">
 
-    <!-- Sticky Quiz Header & Timer Bar -->
-    <div class="sticky top-20 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md p-4 flex items-center justify-between">
-        <div>
-            <span class="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Active Attempt</span>
-            <h2 class="text-base font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">{{ arena.name }}</h2>
-        </div>
+    <!-- JSON Data for React Quiz Runner -->
+    <script id="quiz-questions-data" type="application/json">
+        {{ questions_json|safe }}
+    </script>
 
-        <!-- Live Stopwatch Timer -->
-        <div class="flex items-center space-x-3">
-            <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-sm font-bold shadow-inner">
-                <i class="fa-regular fa-clock text-indigo-500 text-xs animate-pulse"></i>
-                <span id="timerDisplay">00:00</span>
-            </div>
-            <span class="text-xs font-semibold text-slate-500">{{ answers.count }} Questions</span>
-        </div>
+    <!-- React Quiz Runner Mount Node -->
+    <div id="react-quiz-runner"
+        data-arena-name="{{ arena.name }}"
+        data-arena-id="{{ arena.id }}"
+        data-attempt-id="{{ attempt.id }}"
+        data-csrf-token="{{ csrf_token }}"
+        data-submit-url="{% url 'quizzes:submit' attempt.id %}"
+        data-exit-url="{% url 'arenas:detail' arena.id %}">
     </div>
 
-    <!-- Quiz Taking Form -->
-    <form id="quizForm" method="POST" action="{% url 'quizzes:submit' attempt.id %}" class="space-y-6">
-        {% csrf_token %}
-        <input type="hidden" name="duration_seconds" id="durationSecondsInput" value="0">
-
-        {% for ans in answers %}
-        {% with q=ans.question %}
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 sm:p-8 space-y-4">
-            
-            <!-- Question Number & Type -->
-            <div class="flex items-center justify-between">
-                <span class="px-3 py-1 rounded-lg text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-                    Question {{ forloop.counter }} of {{ answers.count }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
-                    {% if q.is_mcq %}bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300
-                    {% elif q.is_short %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300
-                    {% else %}bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300{% endif %}">
-                    {{ q.get_question_type_display }}
-                </span>
+    <!-- Progressive Enhancement Fallback (shown if JavaScript is disabled) -->
+    <noscript>
+        <div class="space-y-6">
+            <!-- Quiz Header -->
+            <div class="rounded-xl border border-border bg-card p-4 flex items-center justify-between text-card-foreground">
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-primary tracking-wider">Active Attempt</span>
+                    <h2 class="text-base font-bold text-foreground">{{ arena.name }}</h2>
+                </div>
+                <span class="text-xs font-semibold text-muted-foreground">{{ answers.count }} Questions</span>
             </div>
 
-            <!-- Question Prompt -->
-            <p class="text-base font-semibold text-slate-900 dark:text-white leading-relaxed">
-                {{ q.question_text }}
-            </p>
+            <!-- Quiz Taking Form -->
+            <form id="fallbackQuizForm" method="POST" action="{% url 'quizzes:submit' attempt.id %}" class="space-y-6">
+                {% csrf_token %}
+                <input type="hidden" name="duration_seconds" value="60">
 
-            <!-- Answers Section based on Type -->
-            {% if q.is_mcq and q.options %}
-            <div class="space-y-2.5 pt-2">
-                {% for opt in q.options %}
-                <label class="group/opt flex items-center p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 cursor-pointer transition-all">
-                    <input type="radio" name="question_{{ q.id }}" value="{{ opt }}"
-                        class="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700">
-                    <span class="ml-3 text-sm font-medium text-slate-800 dark:text-slate-200 group-hover/opt:text-indigo-900 dark:group-hover/opt:text-white">
-                        {{ opt }}
-                    </span>
-                </label>
+                {% for ans in answers %}
+                {% with q=ans.question %}
+                <div class="rounded-2xl border border-border bg-card p-6 space-y-4 text-card-foreground">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-primary/10 text-primary">
+                            Question {{ forloop.counter }} of {{ answers.count }}
+                        </span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary text-secondary-foreground">
+                            {{ q.get_question_type_display }}
+                        </span>
+                    </div>
+
+                    <p class="text-base font-semibold text-foreground leading-relaxed">{{ q.question_text }}</p>
+
+                    {% if q.is_mcq and q.options %}
+                    <div class="space-y-2 pt-2">
+                        {% for opt in q.options %}
+                        <label class="flex items-center p-3 rounded-lg border border-border hover:bg-secondary cursor-pointer">
+                            <input type="radio" name="question_{{ q.id }}" value="{{ opt }}" class="w-4 h-4 text-primary">
+                            <span class="ml-3 text-sm text-foreground">{{ opt }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="pt-2">
+                        <textarea name="question_{{ q.id }}" rows="4" placeholder="Type your answer here..."
+                            class="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground text-sm"></textarea>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endwith %}
                 {% endfor %}
-            </div>
-            {% elif q.is_short %}
-            <div class="pt-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Write your concise answer (1-3 sentences):</label>
-                <textarea name="question_{{ q.id }}" rows="3" placeholder="Type your answer here..."
-                    class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-            </div>
-            {% else %}
-            <div class="pt-2">
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Write your detailed analytical answer:</label>
-                <textarea name="question_{{ q.id }}" rows="6" placeholder="Structure your answer addressing the main concepts..."
-                    class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-            </div>
-            {% endif %}
 
+                <div class="flex items-center justify-between pt-4 border-t border-border">
+                    <a href="{% url 'arenas:detail' arena.id %}" class="text-xs font-medium text-muted-foreground hover:text-foreground">
+                        Exit Quiz
+                    </a>
+                    <button type="submit" class="px-6 py-2 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700">
+                        Submit Quiz
+                    </button>
+                </div>
+            </form>
         </div>
-        {% endwith %}
-        {% endfor %}
-
-        <!-- Submit Bar -->
-        <div class="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-800">
-            <a href="{% url 'arenas:detail' arena.id %}" onclick="return confirm('Exit this quiz attempt? Your progress will not be saved.');"
-                class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                <i class="fa-solid fa-arrow-left mr-1.5"></i> Exit Quiz
-            </a>
-            <button type="submit"
-                class="px-8 py-3 rounded-xl text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                Submit Quiz & Grade <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
-            </button>
-        </div>
-
-    </form>
+    </noscript>
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Stopwatch timer
-    let secondsElapsed = 0;
-    const timerDisplay = document.getElementById('timerDisplay');
-    const durationInput = document.getElementById('durationSecondsInput');
-
-    const timerInterval = setInterval(() => {
-        secondsElapsed++;
-        durationInput.value = secondsElapsed;
-
-        const mins = Math.floor(secondsElapsed / 60);
-        const secs = secondsElapsed % 60;
-        const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        timerDisplay.textContent = formatted;
-    }, 1000);
-
-    document.getElementById('quizForm').addEventListener('submit', () => {
-        clearInterval(timerInterval);
-    });
-</script>
+<!-- React Component: QuizRunner -->
+<script type="text/babel" src="/static/js/components/QuizRunner.jsx"></script>
 {% endblock %}
-
