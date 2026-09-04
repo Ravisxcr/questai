@@ -82,35 +82,47 @@ Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-Default settings:
-```env
-DEBUG=True
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_DEFAULT_MODEL=llama3.2
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_ALWAYS_EAGER=False
-```
-*(Note: If you do not want to run Redis or a separate Celery worker during local development, set `CELERY_ALWAYS_EAGER=True` in `.env` to execute tasks synchronously in-process.)*
 
-### 3. Database Migrations
+---
+
+## Service Management with Taskfile
+
+A `Taskfile.yml` is provided to simplify service startup, background management, monitoring, and teardown:
+
+| Command | Description |
+|---|---|
+| `task up` | Start Redis, Celery worker, and Django server in background |
+| `task down` | Gracefully tear down all background services |
+| `task restart` | Restart all background services |
+| `task status` | Check live status of Redis, Celery, Django, and Ollama |
+| `task server` | Run Django development server in foreground |
+| `task worker` | Run Celery worker in foreground |
+| `task logs:all` | Tail combined logs for Django and Celery |
+| `task test` | Run automated test suite (13 unit & integration tests) |
+| `task seed` | Seed demo Arena with sample questions and attempt |
+| `task clean` | Clean up temporary files, cache, and logs |
+
+---
+
+### Manual Execution (Without Task)
+
+#### 1. Database Migrations
 ```bash
 python manage.py migrate
 ```
 
-### 4. Optional: Seed Demo Data
-Populate a sample Arena with questions and a practice attempt:
+#### 2. Optional: Seed Demo Data
 ```bash
 python manage.py seed_demo
 ```
 
-### 5. Running the Application
-
-#### Terminal 1: Start Celery Worker (if using Redis)
+#### 3. Running Services
+##### Terminal 1: Celery Worker
 ```bash
 celery -A questai worker -l info
 ```
 
-#### Terminal 2: Start Django Web Server
+##### Terminal 2: Django Server
 ```bash
 python manage.py runserver 0.0.0.0:8000
 ```

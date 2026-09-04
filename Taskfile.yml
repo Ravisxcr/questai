@@ -1,0 +1,234 @@
+version: '3'
+
+vars:
+  PYTHON: .venv/bin/python
+  CELERY: .venv/bin/celery
+  PID_DIR: .run
+  LOG_DIR: logs
+  PORT: 8000
+  HOST: 0.0.0.0
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  setup:
+    desc: Set up dependencies, database migrations, and initial seed data
+    cmds:
+      - echo "==> Running database migrations..."
+      - "{{.PYTHON}} manage.py migrate"
+      - echo "==> Seeding demo data..."
+      - "{{.PYTHON}} manage.py seed_demo"
+      - echo "==> Setup completed successfully."
+
+  migrate:
+    desc: Run Django database migrations
+    cmds:
+      - "{{.PYTHON}} manage.py migrate"
+
+  makemigrations:
+    desc: Generate new database migrations
+    cmds:
+      - "{{.PYTHON}} manage.py makemigrations arenas questions quizzes"
+
+  seed:
+    desc: Seed demo Arena with sample questions and quiz attempts
+    cmds:
+      - "{{.PYTHON}} manage.py seed_demo"
+
+  test:
+    desc: Run automated test suite
+    cmds:
+      - "{{.PYTHON}} manage.py test tests"
+
+  redis:start:
+    desc: Start Redis service in background
+    cmds:
+      - |
+        bash -c '
+        if redis-cli ping >/dev/null 2>&1; then
+          echo "Redis is already running."
+        else
+          echo "Starting Redis daemon..."
+          redis-server --daemonize yes 2>/dev/null || sudo service redis-server start 2>/dev/null || true
+          sleep 0.5
+          if redis-cli ping >/dev/null 2>&1; then
+            echo "Redis started successfully."
+          else
+            echo "Warning: Redis daemon could not be started directly. (Tasks will run in eager mode if CELERY_ALWAYS_EAGER=True)."
+          fi
+        fi
+        '
+    silent: false
+
+  redis:stop:
+    desc: Stop Redis service
+    cmds:
+      - |
+        bash -c '
+        if redis-cli ping >/dev/null 2>&1; then
+          echo "Stopping Redis..."
+          redis-cli shutdown 2>/dev/null || sudo service redis-server stop 2>/dev/null || true
+          echo "Redis stopped."
+        else
+          echo "Redis is not running."
+        fi
+        '
+    silent: false
+
+  up:
+    desc: Start all QuestAI services (Redis, Celery worker, Django web server) in background
+    cmds:
+      - mkdir -p {{.PID_DIR}} {{.LOG_DIR}}
+      - task: redis:start
+      - |
+        bash -c '
+        # 1. Start Celery Worker
+        if [ -f {{.PID_DIR}}/celery.pid ] && kill -0 $(cat {{.PID_DIR}}/celery.pid) 2>/dev/null; then
+          echo "Celery worker is already running (PID: $(cat {{.PID_DIR}}/celery.pid))."
+        else
+          echo "Starting Celery worker in background..."
+          nohup {{.CELERY}} -A questai worker -l info > {{.LOG_DIR}}/celery.log 2>&1 &
+          CELERY_PID=$!
+          echo $CELERY_PID > {{.PID_DIR}}/celery.pid
+          echo "Celery worker started (PID: $CELERY_PID, log: {{.LOG_DIR}}/celery.log)."
+        fi
+
+        # 2. Start Django Development Server
+        if [ -f {{.PID_DIR}}/django.pid ] && kill -0 $(cat {{.PID_DIR}}/django.pid) 2>/dev/null; then
+          echo "Django server is already running (PID: $(cat {{.PID_DIR}}/django.pid))."
+        else
+          echo "Starting Django web server on {{.HOST}}:{{.PORT}}..."
+          nohup {{.PYTHON}} manage.py runserver {{.HOST}}:{{.PORT}} > {{.LOG_DIR}}/django.log 2>&1 &
+          DJANGO_PID=$!
+          echo $DJANGO_PID > {{.PID_DIR}}/django.pid
+          echo "Django server started (PID: $DJANGO_PID, log: {{.LOG_DIR}}/django.log)."
+        fi
+        '
+      - echo ""
+      - echo "=========================================================="
+      - echo " QuestAI services started successfully!"
+      - 'echo " Web Interface:  http://localhost:{{.PORT}}"'
+      - 'echo " Logs directory: ./{{.LOG_DIR}}/"'
+      - 'echo " Check status:   task status"'
+      - 'echo " Stop services:  task down"'
+      - echo "=========================================================="
+
+  down:
+    desc: Stop all background QuestAI services (Django web server, Celery worker)
+    cmds:
+      - |
+        bash -c '
+        echo "Tearing down QuestAI services..."
+
+        # Stop Django server
+        if [ -f {{.PID_DIR}}/django.pid ]; then
+          PID=$(cat {{.PID_DIR}}/django.pid)
+          if kill -0 $PID 2>/dev/null; then
+            kill -TERM $PID 2>/dev/null || kill -9 $PID 2>/dev/null || true
+            echo "Stopped Django server (PID: $PID)."
+          fi
+          rm -f {{.PID_DIR}}/django.pid
+        fi
+
+        # Stop Celery worker
+        if [ -f {{.PID_DIR}}/celery.pid ]; then
+          PID=$(cat {{.PID_DIR}}/celery.pid)
+          if kill -0 $PID 2>/dev/null; then
+            kill -TERM $PID 2>/dev/null || kill -9 $PID 2>/dev/null || true
+            echo "Stopped Celery worker (PID: $PID)."
+          fi
+          rm -f {{.PID_DIR}}/celery.pid
+        fi
+
+        # Clean up any lingering processes
+        pkill -f "[m]anage.py runserver" 2>/dev/null || true
+        pkill -f "[c]elery -A questai worker" 2>/dev/null || true
+
+        echo "All application services stopped."
+        exit 0
+        '
+    silent: false
+
+  restart:
+    desc: Restart all QuestAI services
+    cmds:
+      - task: down
+      - sleep 1
+      - task: up
+
+  status:
+    desc: Check the health and status of all services (Redis, Celery, Django, Ollama)
+    cmds:
+      - |
+        bash -c '
+        echo "=== QuestAI Service Status ==="
+        
+        # 1. Django Web Server
+        if [ -f {{.PID_DIR}}/django.pid ] && kill -0 $(cat {{.PID_DIR}}/django.pid) 2>/dev/null; then
+          echo "[✓] Django Server: RUNNING (PID: $(cat {{.PID_DIR}}/django.pid), Port: {{.PORT}})"
+        elif pgrep -f "[m]anage.py runserver" >/dev/null 2>&1; then
+          echo "[✓] Django Server: RUNNING (Port: {{.PORT}})"
+        else
+          echo "[✗] Django Server: STOPPED"
+        fi
+
+        # 2. Celery Worker
+        if [ -f {{.PID_DIR}}/celery.pid ] && kill -0 $(cat {{.PID_DIR}}/celery.pid) 2>/dev/null; then
+          echo "[✓] Celery Worker: RUNNING (PID: $(cat {{.PID_DIR}}/celery.pid))"
+        elif pgrep -f "[c]elery -A questai worker" >/dev/null 2>&1; then
+          echo "[✓] Celery Worker: RUNNING"
+        else
+          echo "[✗] Celery Worker: STOPPED"
+        fi
+
+        # 3. Redis Broker
+        if redis-cli ping >/dev/null 2>&1; then
+          echo "[✓] Redis Broker:  CONNECTED (PONG)"
+        else
+          echo "[✗] Redis Broker:  NOT REACHABLE"
+        fi
+
+        # 4. Ollama LLM Service
+        if curl -s -m 2 http://localhost:11434/api/tags >/dev/null 2>&1; then
+          echo "[✓] Ollama Service: CONNECTED (http://localhost:11434)"
+        else
+          echo "[!] Ollama Service: OFFLINE or NOT REACHABLE (Run ollama serve)"
+        fi
+        echo "=============================="
+        '
+    silent: true
+
+  logs:server:
+    desc: Tail Django server logs
+    cmds:
+      - tail -f {{.LOG_DIR}}/django.log
+
+  logs:celery:
+    desc: Tail Celery worker logs
+    cmds:
+      - tail -f {{.LOG_DIR}}/celery.log
+
+  logs:all:
+    desc: Tail both Django and Celery logs
+    cmds:
+      - tail -f {{.LOG_DIR}}/django.log {{.LOG_DIR}}/celery.log
+
+  server:
+    desc: Run Django server directly in the foreground
+    cmds:
+      - "{{.PYTHON}} manage.py runserver {{.HOST}}:{{.PORT}}"
+
+  worker:
+    desc: Run Celery worker directly in the foreground
+    cmds:
+      - "{{.CELERY}} -A questai worker -l info"
+
+  clean:
+    desc: Clean temporary files, caches, and log files
+    cmds:
+      - rm -rf {{.PID_DIR}} {{.LOG_DIR}}/*.log __pycache__ */__pycache__ */*/__pycache__ .pytest_cache
+      - echo "Cleaned caches and log files."

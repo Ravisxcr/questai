@@ -235,6 +235,11 @@
                                 <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/60 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                                     {{ q.difficulty }}
                                 </span>
+                                {% if q.is_multiagent_verified %}
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center" title="100% Fact-checked by 4-agent consensus pipeline">
+                                    <i class="fa-solid fa-shield-halved mr-1 text-[9px] text-emerald-600"></i> Multi-Agent Verified
+                                </span>
+                                {% endif %}
                             </div>
 
                             <form method="POST" action="{% url 'questions:delete' q.id %}" onsubmit="return confirm('Delete this question?');">
@@ -267,22 +272,66 @@
                         <!-- Reveal Answer Accordion -->
                         <details class="group/ans bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
                             <summary class="cursor-pointer px-3 py-2 font-semibold text-indigo-600 dark:text-indigo-400 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/40 select-none">
-                                <span>Reveal Model Answer & Rubric</span>
+                                <span class="flex items-center">
+                                    <i class="fa-solid fa-brain mr-1.5 text-indigo-500"></i> Reveal Model Answer & Multi-Agent Reasoning
+                                </span>
                                 <i class="fa-solid fa-chevron-down text-[10px] group-open/ans:rotate-180 transition-transform"></i>
                             </summary>
-                            <div class="p-3 pt-2 border-t border-slate-100 dark:border-slate-700 space-y-2 text-slate-700 dark:text-slate-300">
+                            <div class="p-3.5 pt-2 border-t border-slate-100 dark:border-slate-700 space-y-3 text-slate-700 dark:text-slate-300">
+                                <!-- Correct Answer Box -->
                                 <div>
                                     <span class="font-bold text-slate-900 dark:text-white">Correct / Ideal Answer:</span>
                                     <p class="mt-1 text-slate-800 dark:text-slate-200 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5 rounded-lg font-medium">
                                         {{ q.correct_answer }}
                                     </p>
                                 </div>
+
+                                <!-- Grounding Evidence Quote -->
+                                {% if q.grounding_evidence %}
+                                <div class="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border-l-2 border-indigo-500">
+                                    <span class="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-0.5">Source Evidence:</span>
+                                    <p class="italic text-slate-600 dark:text-slate-400 text-xs">"{{ q.grounding_evidence }}"</p>
+                                </div>
+                                {% endif %}
+
+                                <!-- Step-by-Step Reasoning -->
+                                {% if q.step_by_step_reasoning %}
+                                <div class="space-y-1">
+                                    <span class="font-bold text-slate-900 dark:text-white flex items-center">
+                                        <i class="fa-solid fa-route mr-1.5 text-indigo-500 text-[10px]"></i> Step-by-Step Deductive Reasoning:
+                                    </span>
+                                    <p class="text-slate-600 dark:text-slate-400 whitespace-pre-line bg-indigo-50/40 dark:bg-indigo-950/20 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                                        {{ q.step_by_step_reasoning }}
+                                    </p>
+                                </div>
+                                {% endif %}
+
+                                <!-- Distractor Analysis -->
+                                {% if q.distractor_analysis %}
+                                <div class="space-y-1.5">
+                                    <span class="font-bold text-slate-900 dark:text-white flex items-center">
+                                        <i class="fa-solid fa-magnifying-glass-chart mr-1.5 text-rose-500 text-[10px]"></i> Distractor Analysis (Why other choices are incorrect):
+                                    </span>
+                                    <div class="space-y-1">
+                                        {% for option_text, reason in q.distractor_analysis.items %}
+                                        <div class="p-2 rounded-md bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40">
+                                            <span class="font-semibold text-rose-800 dark:text-rose-300">&bull; {{ option_text }}:</span>
+                                            <span class="text-slate-600 dark:text-slate-400 ml-1">{{ reason }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Core Explanation -->
                                 {% if q.explanation %}
                                 <div>
                                     <span class="font-bold text-slate-900 dark:text-white">Explanation:</span>
                                     <p class="mt-0.5 text-slate-600 dark:text-slate-400">{{ q.explanation }}</p>
                                 </div>
                                 {% endif %}
+
+                                <!-- Key Points -->
                                 {% if q.key_points %}
                                 <div>
                                     <span class="font-bold text-slate-900 dark:text-white">Key Points / Rubric:</span>

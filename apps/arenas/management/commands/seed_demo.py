@@ -29,6 +29,14 @@ class Command(BaseCommand):
                 "correct_answer": "SYN -> SYN-ACK -> ACK",
                 "explanation": "The client sends a SYN packet, the server responds with SYN-ACK, and the client confirms with ACK to establish a reliable full-duplex connection.",
                 "key_points": ["SYN flag", "SYN-ACK response", "ACK final confirmation"],
+                "is_multiagent_verified": True,
+                "grounding_evidence": "TCP establishes a full-duplex session through the three-way handshake: the initiating endpoint transmits a SYN packet, the receiver replies with SYN-ACK, and the initiator concludes synchronization with ACK.",
+                "step_by_step_reasoning": "Step 1: In the TCP state machine, connection initiation begins with the client sending a Synchronize (SYN) control packet.\nStep 2: The server acknowledges this request and synchronizes its own sequence counter by returning a SYN-ACK packet.\nStep 3: The client finalizes handshaking by returning an Acknowledgement (ACK) packet. Data transmission begins immediately after.",
+                "distractor_analysis": {
+                    "ACK -> SYN -> SYN-ACK": "Incorrect sequence. A connection cannot begin with an ACK because there is nothing to acknowledge yet.",
+                    "SYN -> ACK -> FIN": "Incorrect sequence. FIN is reserved for teardown and terminating a connection, not establishing one.",
+                    "HELLO -> ACK -> DATA": "Incorrect protocol terminology. TCP utilizes SYN flags rather than HELLO headers."
+                },
             },
             {
                 "question_type": "MCQ",
@@ -38,6 +46,14 @@ class Command(BaseCommand):
                 "correct_answer": "Leader Completeness",
                 "explanation": "If a log entry is committed in a given term, then that entry will be present in the logs of the leaders for all higher-numbered terms.",
                 "key_points": ["Leader completeness", "Safety invariant", "Log replication"],
+                "is_multiagent_verified": True,
+                "grounding_evidence": "Raft ensures the Leader Completeness Property: if a log entry is committed in a given term, that entry is guaranteed to be present in the logs of the leaders for all higher-numbered terms.",
+                "step_by_step_reasoning": "Step 1: Raft enforces a critical safety property called Leader Completeness.\nStep 2: During election, a follower rejects candidates whose logs are less up-to-date than its own.\nStep 3: This guarantees that any elected leader possesses all previously committed log entries without needing to transfer past entries backward.",
+                "distractor_analysis": {
+                    "Byzantine Fault Tolerance": "Incorrect. Standard Raft operates under crash-recovery / fail-stop fault models and does not tolerate malicious or arbitrary Byzantine failures.",
+                    "Infinite Scalability": "Incorrect. Consensus protocols like Raft replicate all logs across cluster quorums and do not scale throughput infinitely with additional nodes.",
+                    "Zero Network Overhead": "Incorrect. Raft requires periodic heartbeats and append-entries RPCs, creating steady network communication."
+                },
             },
             {
                 "question_type": "SHORT",

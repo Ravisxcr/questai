@@ -38,6 +38,12 @@ class Question(models.Model):
     # Key points / keywords / grading criteria for short/long answers
     key_points = models.JSONField(default=list, blank=True)
     
+    # Multi-Agent Verification & Deep Reasoning fields
+    step_by_step_reasoning = models.TextField(blank=True, help_text="Detailed deductive reasoning leading to the answer")
+    distractor_analysis = models.JSONField(default=dict, blank=True, help_text="Why each incorrect option is invalid")
+    grounding_evidence = models.TextField(blank=True, help_text="Direct quote/fact from source document proving the answer")
+    is_multiagent_verified = models.BooleanField(default=False, help_text="Passed 4-agent consensus verification")
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

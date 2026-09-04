@@ -123,10 +123,54 @@
 
                 <!-- Model / Correct Answer -->
                 <div class="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-950 dark:text-indigo-200 text-xs">
-                    <span class="block font-bold uppercase tracking-wider text-[10px] text-indigo-400 mb-1">Model Correct Answer:</span>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold uppercase tracking-wider text-[10px] text-indigo-400">Model Correct Answer:</span>
+                        {% if q.is_multiagent_verified %}
+                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
+                            <i class="fa-solid fa-shield-halved mr-1"></i> Multi-Agent Verified
+                        </span>
+                        {% endif %}
+                    </div>
                     <p class="font-medium whitespace-pre-line">{{ q.correct_answer }}</p>
                 </div>
             </div>
+
+            <!-- Deep Reasoning & Distractor Breakdown Accordion -->
+            {% if q.step_by_step_reasoning or q.distractor_analysis or q.grounding_evidence %}
+            <div class="p-3.5 rounded-xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+                {% if q.grounding_evidence %}
+                <div class="border-l-2 border-indigo-500 pl-2">
+                    <span class="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Source Evidence:</span>
+                    <p class="italic text-slate-600 dark:text-slate-400 text-xs">"{{ q.grounding_evidence }}"</p>
+                </div>
+                {% endif %}
+
+                {% if q.step_by_step_reasoning %}
+                <div>
+                    <span class="font-bold text-slate-900 dark:text-white flex items-center">
+                        <i class="fa-solid fa-route mr-1.5 text-indigo-500 text-[10px]"></i> Step-by-Step Deductive Reasoning:
+                    </span>
+                    <p class="mt-0.5 text-slate-600 dark:text-slate-400 whitespace-pre-line">{{ q.step_by_step_reasoning }}</p>
+                </div>
+                {% endif %}
+
+                {% if q.distractor_analysis %}
+                <div class="space-y-1">
+                    <span class="font-bold text-slate-900 dark:text-white flex items-center">
+                        <i class="fa-solid fa-magnifying-glass-chart mr-1.5 text-rose-500 text-[10px]"></i> Why Other Choices Are Incorrect:
+                    </span>
+                    <div class="space-y-1">
+                        {% for opt, reason in q.distractor_analysis.items %}
+                        <div class="p-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <span class="font-semibold text-rose-600 dark:text-rose-400">&bull; {{ opt }}:</span>
+                            <span class="text-slate-600 dark:text-slate-400 ml-1">{{ reason }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Explanation & Rubric -->
             {% if q.explanation or q.key_points %}
